@@ -1,0 +1,17 @@
+{
+  "name": "reserva-espacios-academicos",
+  "version": "1.1.0",
+  "private": true,
+  "description": "Aplicación web para reservar salas de estudio y laboratorios sin cruces de horario (Express + datos en memoria).",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}

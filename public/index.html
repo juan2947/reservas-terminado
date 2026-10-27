@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#1E4FA3">
+  <meta name="description" content="Prototipo académico para gestionar reservas de espacios institucionales.">
+  <title>Reserva de Espacios | Institución</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <section id="auth-screen" class="auth-screen">
+    <div class="auth-card">
+      <p class="eyebrow">PORTAL INSTITUCIONAL</p><h1>Reserva de espacios académicos</h1>
+      <p>Inicia sesión o crea tu cuenta para gestionar tus reservas.</p>
+      <div class="auth-tabs"><button type="button" id="show-login" class="button button-primary">Iniciar sesión</button><button type="button" id="show-register" class="button button-secondary">Crear cuenta</button></div>
+      <form id="login-form" class="auth-form">
+        <label>Correo institucional<input type="email" id="login-email" required autocomplete="username" placeholder="correo@institucion.edu"></label>
+        <label>Contraseña<input type="password" id="login-password" required autocomplete="current-password" placeholder="Mínimo 8 caracteres"></label>
+        <div id="login-message" class="form-message" role="alert" hidden></div><button class="button button-primary" type="submit">Entrar</button>
+      </form>
+      <form id="register-form" class="auth-form" hidden>
+        <label>Nombre completo<input type="text" id="register-name" minlength="3" maxlength="100" required autocomplete="name"></label>
+        <label>Correo institucional<input type="email" id="register-email" required autocomplete="email"></label>
+        <label>Perfil<select id="register-role" required><option value="alumno">Alumno / estudiante</option><option value="docente">Docente</option></select><small>El perfil directivo solo puede ser asignado por un administrador del sistema.</small></label>
+        <label>Contraseña<input type="password" id="register-password" minlength="8" required autocomplete="new-password"></label>
+        <div id="register-message" class="form-message" role="alert" hidden></div><button class="button button-primary" type="submit">Crear cuenta</button>
+      </form>
+      <p class="auth-demo"><strong>Cuenta directiva de demostración</strong><br>directivo@institucion.edu<br>Contraseña: Admin123!<br><small>Cámbiala antes de cualquier uso real.</small></p>
+    </div>
+  </section>
+  <div class="app-shell" id="application-shell" hidden>
+    <aside class="sidebar" aria-label="Navegación principal">
+      <a class="brand" href="#inicio" data-view-link="dashboard" aria-label="Ir al inicio">
+        <span class="brand-mark" aria-hidden="true">⌂</span>
+        <span><strong>Reserva de Espacios</strong><small>Portal institucional</small></span>
+      </a>
+      <div class="nav-label">MENÚ PRINCIPAL</div>
+      <nav class="main-nav">
+        <button class="nav-link active" type="button" data-view-link="dashboard"><span aria-hidden="true">▦</span> Resumen</button>
+        <button class="nav-link" type="button" data-view-link="form"><span aria-hidden="true">＋</span> Nueva reserva</button>
+        <button class="nav-link" type="button" data-view-link="reservas"><span aria-hidden="true">▤</span> Reservas</button>
+        <button class="nav-link" type="button" data-view-link="disponibilidad"><span aria-hidden="true">◷</span> Disponibilidad</button>
+        <button class="nav-link" type="button" data-view-link="espacios" data-admin-only><span aria-hidden="true">⌂</span> Espacios</button>
+        <button class="nav-link" type="button" data-view-link="perfiles" data-admin-only><span aria-hidden="true">♙</span> Perfiles</button>
+      </nav>
+      <div class="sidebar-note">
+        <span class="note-icon" aria-hidden="true">i</span>
+        <p><strong>Prototipo académico</strong><br>La información se conserva solo mientras el servidor esté encendido.</p>
+      </div>
+      <div class="sidebar-footer">Caso 2 · Programación Aplicada</div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">GESTIÓN DE ESPACIOS ACADÉMICOS</p>
+          <h1 id="page-title">Resumen general</h1>
+        </div>
+        <div class="topbar-user"><span class="user-avatar" aria-hidden="true">U</span><span><strong id="current-user-name">Usuario</strong><small id="current-user-role">Perfil</small></span><button class="button button-secondary button-small" id="logout-button" type="button">Salir</button></div>
+      </header>
+
+      <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+      <section class="view" id="view-dashboard">
+        <div class="welcome-row">
+          <div><h2>Panel de reservas</h2><p>Consulta los espacios y organiza las próximas actividades académicas.</p></div>
+          <button class="button button-primary" type="button" data-go="form">＋ Crear reserva</button>
+        </div>
+        <div class="stats-grid">
+          <article class="stat-card"><div class="stat-icon blue" aria-hidden="true">▤</div><div><p>Total de reservas</p><strong id="stat-total">0</strong><small>Registradas en memoria</small></div></article>
+          <article class="stat-card"><div class="stat-icon green" aria-hidden="true">✓</div><div><p>Reservas activas</p><strong id="stat-active">0</strong><small>Sin cancelar ni finalizar</small></div></article>
+          <article class="stat-card"><div class="stat-icon amber" aria-hidden="true">⌂</div><div><p>Espacios disponibles</p><strong id="stat-spaces">0</strong><small>Espacios registrados</small></div></article>
+        </div>
+        <div class="panel">
+          <div class="panel-heading"><div><h2>Próximas reservas</h2><p>Las reservas se ordenan por fecha y hora.</p></div><button class="button button-secondary button-small" type="button" data-go="reservas">Ver todas</button></div>
+          <div class="table-wrap"><table><thead><tr><th>Espacio</th><th>Solicitante</th><th>Fecha</th><th>Horario</th><th>Estado</th></tr></thead><tbody id="upcoming-body"><tr><td colspan="5" class="empty-cell">Todavía no hay reservas. Crea la primera con el botón “Crear reserva”.</td></tr></tbody></table></div>
+        </div>
+        <div class="info-strip"><span aria-hidden="true">✦</span><div><strong>Regla principal</strong><p>El sistema rechaza una reserva si el mismo espacio ya está ocupado en la misma fecha y el horario se cruza. Los horarios consecutivos sí están permitidos.</p></div></div>
+      </section>
+
+      <section class="view" id="view-form" hidden>
+        <div class="section-intro"><span class="section-icon" aria-hidden="true">＋</span><div><h2 id="reservation-form-title">Registrar una reserva</h2><p>Completa los datos obligatorios para solicitar un espacio académico.</p></div></div>
+        <div class="panel form-panel">
+          <form id="reservation-form">
+            <input type="hidden" id="reservation-id">
+            <div class="form-grid">
+              <label>Espacio académico <span class="required">*</span><select id="reservation-space" required><option value="">Selecciona un espacio</option></select><small>El espacio debe existir en el listado institucional.</small></label>
+              <label>Nombre del solicitante <span class="required">*</span><input id="reservation-requester" type="text" minlength="3" maxlength="100" placeholder="Ej. Ana Pérez" required><small>Escribe el nombre de quien solicita la reserva.</small></label>
+              <label>Fecha <span class="required">*</span><input id="reservation-date" type="date" required><small>No se permiten fechas anteriores a hoy.</small></label>
+              <div class="field-pair"><label>Hora de inicio <span class="required">*</span><input id="reservation-start" type="time" required></label><label>Hora de fin <span class="required">*</span><input id="reservation-end" type="time" required></label></div>
+              <label class="full-width">Motivo de la reserva <span class="muted">(opcional)</span><textarea id="reservation-reason" rows="3" maxlength="300" placeholder="Ej. Trabajo grupal, tutoría o práctica de laboratorio"></textarea><small>Máximo 300 caracteres.</small></label>
+            </div>
+            <div class="form-message" id="reservation-form-message" role="alert" hidden></div>
+            <div class="form-actions"><button class="button button-secondary" id="cancel-edit" type="button" hidden>Descartar cambios</button><button class="button button-primary" type="submit" id="reservation-submit">Confirmar reserva</button></div>
+          </form>
+        </div>
+        <div class="info-strip"><span aria-hidden="true">i</span><div><strong>Antes de confirmar</strong><p>Verifica que la hora final sea posterior a la hora inicial. El servidor revisará si el espacio ya tiene otra reserva activa en ese horario.</p></div></div>
+      </section>
+
+      <section class="view" id="view-reservas" hidden>
+        <div class="section-intro"><span class="section-icon" aria-hidden="true">▤</span><div><h2>Reservas registradas</h2><p>Consulta, filtra, edita o cancela las reservas de este prototipo.</p></div></div>
+        <div class="panel filter-panel"><form id="reservation-filter" class="filter-grid">
+          <label>Espacio<select id="filter-space"><option value="">Todos los espacios</option></select></label>
+          <label>Solicitante<input id="filter-requester" type="search" placeholder="Buscar por nombre"></label>
+          <label>Estado<select id="filter-status"><option value="">Todos los estados</option><option value="activa">Activa</option><option value="finalizada">Finalizada</option><option value="cancelada">Cancelada</option></select></label>
+          <label>Fecha<input id="filter-date" type="date"></label>
+          <div class="filter-actions"><button class="button button-primary button-small" type="submit">Aplicar filtros</button><button class="button button-secondary button-small" id="clear-filters" type="button">Limpiar</button></div>
+        </form></div>
+        <div class="panel"><div class="panel-heading"><div><h2>Listado de reservas</h2><p id="reservation-count">0 resultados</p></div><button class="button button-secondary button-small" id="export-csv" type="button">↓ Exportar CSV</button></div>
+          <div class="table-wrap"><table><thead><tr><th>ID</th><th>Espacio</th><th>Solicitante</th><th>Fecha</th><th>Horario</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="reservations-body"><tr><td colspan="7" class="empty-cell">Cargando reservas…</td></tr></tbody></table></div>
+        </div>
+      </section>
+
+      <section class="view" id="view-disponibilidad" hidden>
+        <div class="section-intro"><span class="section-icon" aria-hidden="true">◷</span><div><h2>Disponibilidad de espacios</h2><p>Consulta las reservas activas de un espacio en la fecha seleccionada.</p></div></div>
+        <div class="panel"><form id="availability-form" class="availability-form"><label>Espacio académico<select id="availability-space" required><option value="">Selecciona un espacio</option></select></label><label>Fecha<input id="availability-date" type="date" required></label><button class="button button-primary" type="submit">Consultar disponibilidad</button></form></div>
+        <div id="availability-result" class="panel availability-result"><div class="empty-state"><span aria-hidden="true">◷</span><h3>Consulta un espacio</h3><p>Selecciona un espacio y una fecha para ver los horarios registrados.</p></div></div>
+      </section>
+
+      <section class="view" id="view-espacios" hidden>
+        <div class="section-intro"><span class="section-icon" aria-hidden="true">⌂</span><div><h2>Espacios académicos</h2><p>Listado y edición de salas y laboratorios (solo directivos).</p></div></div>
+        <div class="two-column-layout">
+          <div class="panel"><div class="panel-heading"><div><h2>Espacios registrados</h2><p>Los nombres se utilizan en los formularios de reserva.</p></div></div><div id="spaces-list" class="space-list"></div></div>
+          <div class="panel"><div class="panel-heading"><div><h2 id="space-form-title">Agregar espacio</h2><p>Nombre, ubicación y capacidad son obligatorios.</p></div></div>
+            <form id="space-form" class="space-form"><input id="space-id" type="hidden"><label>Nombre del espacio<input id="space-name" type="text" minlength="3" maxlength="100" placeholder="Ej. Sala de estudio 2" required></label><label>Ubicación<input id="space-location" type="text" maxlength="100" placeholder="Ej. Bloque A, segundo piso" required></label><label>Capacidad<input id="space-capacity" type="number" min="1" step="1" placeholder="Ej. 8" required></label><div class="form-message" id="space-form-message" role="alert" hidden></div><div class="form-actions"><button class="button button-secondary" id="cancel-space-edit" type="button" hidden>Descartar cambios</button><button class="button button-primary" id="space-submit" type="submit">Guardar espacio</button></div></form>
+          </div>
+        </div>
+        <div class="warning-strip"><strong>Acceso restringido:</strong> solo los directivos pueden crear o editar espacios. El servidor lo verifica en cada solicitud.</div>
+      </section>
+
+      <section class="view" id="view-perfiles" hidden data-admin-only>
+        <div class="section-intro"><span class="section-icon" aria-hidden="true">♙</span><div><h2>Perfiles registrados</h2><p>Información de las cuentas registradas en el sistema.</p></div></div>
+        <div class="panel"><div class="table-wrap"><table><thead><tr><th>ID</th><th>Nombre</th><th>Correo</th><th>Perfil</th></tr></thead><tbody id="profiles-body"><tr><td colspan="4">Cargando perfiles…</td></tr></tbody></table></div></div>
+      </section>
+      <footer class="main-footer"><span>Reserva de Espacios Académicos</span><span>Proyecto integrador · Caso 2</span></footer>
+    </main>
+  </div>
+
+  <dialog id="reservation-dialog" class="detail-dialog">
+    <div class="dialog-header"><div><p class="eyebrow">DETALLE</p><h2 id="dialog-title">Reserva</h2></div><button class="icon-button" id="close-dialog" type="button" aria-label="Cerrar detalle">×</button></div>
+    <div id="dialog-content" class="detail-content"></div>
+    <div class="form-actions"><button class="button button-secondary" id="dialog-close-bottom" type="button">Cerrar</button></div>
+  </dialog>
+  <noscript>Esta aplicación necesita JavaScript activado en el navegador.</noscript>
+</body>
+</html>
